@@ -6,6 +6,7 @@
 #include <sys/time.h>
 
 #define IDX(i, j, n) (((j)+ (i)*(n)))
+#define BLKSIZE 8
 
 
 
@@ -24,25 +25,45 @@ double dclock(){
     return the_time;
 }
 
+static inline int max(const int a, const int b) {
+    return (a > b) ? a : b;
+}
 
+// #define max(a, b) ((a) > (b) ? (a) : (b))
 
 int chol(double * A, unsigned int n){
-    int i, j, k;
+    register unsigned int i, j, k;
+    register double tmp;
 
     for (j = 0; j < n; j++) {
         for (i = j; i < n; i++) {
-            for (k = 0; k < j; k++) {
-                A[IDX(i, j, n)] -= A[IDX(i, k, n)] * A[IDX(j, k, n)];
+            tmp = A[IDX(i, j, n)];
+            for (k = 0; k < j;) {
+                if (k < max(j - BLKSIZE, 0)) {
+                    tmp -= A[IDX(i, k, n)] * A[IDX(j, k, n)];
+                    tmp -= A[IDX(i, k + 1, n)] * A[IDX(j, k + 1, n)];
+                    tmp -= A[IDX(i, k + 2, n)] * A[IDX(j, k + 2, n)];
+                    tmp -= A[IDX(i, k + 3, n)] * A[IDX(j, k + 3, n)];
+                    tmp -= A[IDX(i, k + 4, n)] * A[IDX(j, k + 4, n)];
+                    tmp -= A[IDX(i, k + 5, n)] * A[IDX(j, k + 5, n)];
+                    tmp -= A[IDX(i, k + 6, n)] * A[IDX(j, k + 6, n)];
+                    tmp -= A[IDX(i, k + 7, n)] * A[IDX(j, k + 7, n)];
+                    k += BLKSIZE;
+                } else {
+                    tmp -= A[IDX(i, k, n)] * A[IDX(j, k, n)];
+                    k++;
+                }
             }
+            A[IDX(i, j, n)] = tmp;
         }
 
         if (A[IDX(j, j, n)] < 0.0) {
             return (1);
         }
 
-        A[IDX(j, j, n)] = sqrt(A[IDX(j, j, n)]);
+        tmp = sqrt(A[IDX(j, j, n)]);
         for (i = j + 1; i < n; i++){
-            A[IDX(i, j, n)] /= A[IDX(j, j, n)];
+            A[IDX(i, j, n)] /= tmp;
         }
     }
 

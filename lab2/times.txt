@@ -1,0 +1,13 @@
+chol1: 5.561761e+01
+chol2: 2.241168e+01
+chol3: 2.044369e+01
+chol4: 1.528388e+01
+chol5: 1.651498e+01
+chol6: 1.060669e+01
+
+chol1_O2_mfma_native: 1.275725e+01
+chol2_O2_mfma_native: 1.288568e+01
+chol3_O2_mfma_native: 1.284819e+01
+chol4_O2_mfma_native: 5.904151e+00
+chol5_O2_mfma_native: 5.262655e+00
+chol6_O2_mfma_native: 5.337373e+00
