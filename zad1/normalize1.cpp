@@ -25,23 +25,15 @@ std::string normalize_text(const std::string& text) {
     if (c < 32 || c > 126) continue;
 
     // Rule 2: Skip consecutive whitespace
-    if (c == ' ' && !result.empty() && result.back() == ' ') {
-      continue;
-    }
+    if (c == ' ' && !result.empty() && result.back() == ' ') continue;
 
     // Rule 3: Convert to lowercase
-    if (isalpha(c)) {
-      result += tolower(c);
-      continue;
-    }
+    if (isalpha(c)) c = tolower(c);
 
     // Rule 4: Convert punctuation to commas
-    if (ispunct(c)) {
-      result += ',';
-      continue;
-    }
+    if (ispunct(c)) c = ',';
 
-    // No rule applies
+    // Append the character to the result
     result += c;
   }
 
