@@ -18,14 +18,12 @@
  */
 std::string normalize_text(const std::string& text) {
   std::string result;
+  std::string word;
+  std::string last_word;
 
-  // Pass 1: Handle rules 1, 2, 3, and 4
   for (char c : text) {
     // Rule 1: Skip non-printable ASCII
     if (c < 32 || c > 126) continue;
-
-    // Rule 2: Skip consecutive whitespace
-    if (c == ' ' && !result.empty() && result.back() == ' ') continue;
 
     // Rule 3: Convert to lowercase
     if (isalpha(c)) c = tolower(c);
@@ -33,11 +31,27 @@ std::string normalize_text(const std::string& text) {
     // Rule 4: Convert punctuation to commas
     if (ispunct(c)) c = ',';
 
-    // Append the character to the result
-    result += c;
-  }
+    // Handle new word delimiters
+    if (c == ' ' || c == ',') {
+      // Rule 5: Handle consecutive duplicate words
+      if (!word.empty()) {
+        if (word != last_word) result += word;
+        last_word = word;
+        word.clear();
+      }
 
-  // TODO: Pass 2: Handle rule 5
+      // Rule 2: Skip consecutive whitespace
+      if (c == ' ' && !result.empty() && result.back() == ' ') continue;
+
+      result += c;
+      continue;
+    }
+
+    // Handle regular characters
+    word += c;
+  }
+  // Handle the last word
+  if (word != last_word) result += word;
 
   return result;
 }
@@ -61,11 +75,11 @@ int test() {
   std::cout << "Original: \"" << test4 << "\"" << std::endl;
   std::cout << "Normalized: \"" << normalize_text(test4) << "\"" << std::endl;
 
-  std::string test5 = " leading space and trailing space ";
+  std::string test5 = "     leading space and trailing space     ";
   std::cout << "Original: \"" << test5 << "\"" << std::endl;
   std::cout << "Normalized: \"" << normalize_text(test5) << "\"" << std::endl;
 
-  std::string test6 = "word1 ,,  word1, word2";
+  std::string test6 = "word1 word1, word2 word2";
   std::cout << "Original: \"" << test6 << "\"" << std::endl;
   std::cout << "Normalized: \"" << normalize_text(test6) << "\"" << std::endl;
 
