@@ -126,8 +126,8 @@ int benchmark(const int repeats) {
 }
 
 int main() {
-  constexpr int repeats{1};
+  constexpr int repeats{1000};  // with 100KB files
 
-  return test();
-  // return benchmark(repeats);
+  // return test();
+  return benchmark(repeats);
 }
