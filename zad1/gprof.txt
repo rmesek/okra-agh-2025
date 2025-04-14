@@ -1,0 +1,62 @@
+`g++-13`
+
+#############################
+########## Basic ############
+############################# 
+normalize1 -O0 [Benchmark (1000 iterations): 1.97064 seconds]
+```
+  54.56%  a.out    libc.so.6             [.] __mcount_internal
+  23.67%  a.out    libc.so.6             [.] _mcount
+   4.25%  a.out    a.out                 [.] normalize_text(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+   4.13%  a.out    a.out                 [.] bool __gnu_cxx::operator!=<char const*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >(__gnu_cxx::__normal_iterator<char const*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > const&, __gnu_cxx::__normal_iterator<char c
+   2.57%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::operator+=(char)
+   2.12%  a.out    a.out                 [.] __gnu_cxx::__normal_iterator<char const*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >::base() const
+   2.09%  a.out    a.out                 [.] __gnu_cxx::__normal_iterator<char const*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >::operator++()
+   1.51%  a.out    a.out                 [.] __gnu_cxx::__normal_iterator<char const*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >::operator*() const
+   1.11%  a.out    a.out                 [.] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::operator+=(char)@plt
+   1.10%  a.out    libc.so.6             [.] tolower
+   0.61%  a.out    a.out                 [.] bool std::operator==<char, std::char_traits<char>, std::allocator<char> >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+   0.50%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::clear()
+   0.29%  a.out    a.out                 [.] bool std::operator!=<char, std::char_traits<char>, std::allocator<char> >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+```
+normalize1 -O2 [Benchmark (1000 iterations): 0.64529 seconds]
+
+#############################
+####### Normal loop #########
+############################# 
+normalize2 -O0 [Benchmark (1000 iterations): 1.31727 seconds]
+```
+  34.90%  a.out    a.out                 [.] normalize_text(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+  19.21%  a.out    libc.so.6             [.] __mcount_internal
+   9.18%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::operator+=(char)
+   7.85%  a.out    libc.so.6             [.] isalpha
+   4.57%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::length() const
+   4.54%  a.out    libc.so.6             [.] _mcount
+   4.33%  a.out    libc.so.6             [.] tolower
+   2.75%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::operator=(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&&)
+   1.99%  a.out    a.out                 [.] bool std::operator==<char, std::char_traits<char>, std::allocator<char> >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+   1.51%  a.out    a.out                 [.] bool std::operator!=<char, std::char_traits<char>, std::allocator<char> >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+   1.15%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::clear()
+   1.12%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::operator[](unsigned long) const
+   0.96%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::size() const
+   0.66%  a.out    a.out                 [.] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::operator+=(char)@plt
+   0.58%  a.out    libc.so.6             [.] __memmove_avx512_unaligned_erms
+```
+normalize2 -O2 [Benchmark (1000 iterations): 0.635332 seconds]
+
+#############################
+######## C string ###########
+############################# 
+normalize3 -O0 [Benchmark (1000 iterations): 0.755573 seconds]
+```
+  49.18%  a.out    a.out                 [.] normalize_text(char const*, long)                                                                                                                                                                                                                                                               ◆
+  28.42%  a.out    libc.so.6             [.] __strcmp_evex                                                                                                                                                                                                                                                                                   ▒
+  11.95%  a.out    libc.so.6             [.] isalpha                                                                                                                                                                                                                                                                                         ▒
+   6.24%  a.out    libc.so.6             [.] tolower                                                                                                                                                                                                                                                                                         ▒
+   1.28%  a.out    libc.so.6             [.] __mcount_internal                                                                                                                                                                                                                                                                               ▒
+   0.97%  a.out    libc.so.6             [.] _mcount                                                                                                                                                                                                                                                                                         ▒
+   0.44%  a.out    libc.so.6             [.] ispunct                                                                                                                                                                                                                                                                                         ▒
+   0.24%  a.out    a.out                 [.] isalpha@plt                                                                                                                                                                                                                                                                                     ▒
+   0.20%  a.out    a.out                 [.] tolower@plt                                                                                                                                                                                                                                                                                     ▒                                                                                                                                                                                                                                                                                    ▒
+```
+normalize3 -O2 [Benchmark (1000 iterations): 0.563578 seconds]
