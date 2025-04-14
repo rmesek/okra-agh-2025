@@ -18,40 +18,42 @@
  */
 std::string normalize_text(const std::string& text) {
   std::string result;
-  std::string word;
-  std::string last_word;
+  std::string word, last_word;
+  enum State { NORMAL, COMMA, SPACE, DUPLICATE_SPACE } state = NORMAL;
 
   for (char c : text) {
-    // Rule 1: Skip non-printable ASCII
-    if (c < 32 || c > 126) continue;
+    if (c < 32 || c > 126) continue;  // rule 1
 
-    // Rule 3: Convert to lowercase
-    if (isalpha(c)) c = tolower(c);
+    if (c == ' ') {
+      if (state == SPACE || state == DUPLICATE_SPACE) {  // rule 2
+        state = DUPLICATE_SPACE;
+      } else {
+        state = SPACE;
+      }
+    } else if (isalpha(c)) {  // rule 3
+      c = tolower(c);
+      state = NORMAL;
+    } else if (ispunct(c)) {  // rule 4
+      c = ',';
+      state = COMMA;
+    } else {
+      state = NORMAL;
+    }
 
-    // Rule 4: Convert punctuation to commas
-    if (ispunct(c)) c = ',';
-
-    // Handle new word delimiters
-    if (c == ' ' || c == ',') {
-      // Rule 5: Handle consecutive duplicate words
-      if (!word.empty()) {
+    if (state == COMMA || state == SPACE) {
+      // end of a word
+      if (!word.empty()) {  // rule 5
         if (word != last_word) result += word;
         last_word = word;
         word.clear();
       }
-
-      // Rule 2: Skip consecutive whitespace
-      if (c == ' ' && !result.empty() && result.back() == ' ') continue;
-
-      result += c;
-      continue;
+      result += c;  // only delimiter
+    } else if (state == NORMAL) {
+      // in a word
+      word += c;  // only alphanumeric
     }
-
-    // Handle regular characters
-    word += c;
   }
-  // Handle the last word
-  if (word != last_word) result += word;
+  if (word != last_word) result += word;  // last word
 
   return result;
 }
