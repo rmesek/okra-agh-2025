@@ -1,0 +1,612 @@
+\documentclass[12pt]{article}
+
+% Ustawienia strony
+\usepackage{lipsum}
+\usepackage[margin=1.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{siunitx}
+\usepackage{amsmath}
+\usepackage{cancel}
+\usepackage{makecell}
+\usepackage{mathtools}
+\usepackage{floatrow}
+\usepackage{caption}
+\usepackage[T1]{fontenc}
+\usepackage{fancyvrb}
+\usepackage{subcaption}
+\usepackage{blindtext}
+\usepackage{hyperref}
+\usepackage{amssymb}
+\usepackage{minted}
+\usepackage{xcolor} % to access the named color LightGray
+\definecolor{LightGray}{gray}{0.9}
+
+\setminted{
+	frame=lines,
+	framesep=1mm,
+	baselinestretch=1,
+	bgcolor=LightGray,
+	fontsize=\footnotesize,
+	linenos
+}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=blue,
+	filecolor=magenta,      
+	urlcolor=cyan,
+	pdfpagemode=FullScreen,
+}
+
+\urlstyle{same}
+
+\fvset{tabsize=4}
+\setlist{leftmargin=15pt,labelindent=15pt}
+\setlist[enumerate]{noitemsep,wide=0pt, leftmargin=*}
+\setlength{\parindent}{0pt}
+
+% Ustawienia stopki
+\usepackage{lastpage}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{} % sets both header and footer to nothing
+\renewcommand{\headrulewidth}{0pt}
+\cfoot{\thepage\ z \pageref*{LastPage}}
+
+\begin{document}
+\textbf{Robert Mesek}\text{,} % Autor
+\text{15.04.2025}\text{ } % Data
+
+\begin{center}
+	\section*{Optymalizacja Kodu na Różne Architektury \\
+	  Zadanie 1 - Normalizacja Tekstu}
+	\mbox{}
+\end{center}
+
+\section*{Cel zadania}
+Celem tego zadania jest implementacja funkcji, która przetwarza duże ciągi
+tekstowe (np. zawartość dużego pliku) wykonując szereg operacji normalizacyjnych 
+oraz optymalizacyjnych. \\ \\
+Funkcja powinna:
+\begin{itemize}
+	\item Usuwać znaki spoza zakresu drukowalnych \\
+	(np. wszystkie znaki o kodzie poniżej 32 lub powyżej 126).
+	\item Zamieniać sekwencje białych znaków (spacje, tabulatory, nowe linie) \\
+	na pojedynczą spację.
+	\item Konwertować wszystkie litery do małych liter.
+	\item Konwertować interpunkcję na przecinki.
+	\item Eliminować duplikaty wyrazów występujących jeden po drugim \\
+	(np. "hello hello world" → "hello world").
+\end{itemize}
+\subsection*{Przykład}
+\begin{minted}{text}
+Source:     "Hello hello world... World."
+Normalized: "hello  world,,, ,"
+
+Source:     "\t\n  First.first, ,, second   second; third\n\n"
+Normalized: " first,, ,, second , third"
+
+Source:     "     leading space and trailing space     "
+Normalized: " leading space and trailing space "
+
+Source:     "word1 word1, word2 word2"
+Normalized: "word1 , word2 "
+
+Source:     "Hello\x07 World\x7F!"
+Normalized: "hello world,"
+\end{minted}
+
+\newpage
+
+\section*{Dane techniczne}
+\subsection*{System Operacyjny}
+\begin{minted}{text}
+$ hostnamectl
+Virtualization: wsl
+Operating System: Ubuntu 24.04.2 LTS
+Kernel: Linux 5.15.167.4-microsoft-standard-WSL2
+\end{minted}
+
+\subsection*{Kompilator}
+\begin{minted}{text}
+$ g++ --version
+g++ (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0
+\end{minted}
+
+\subsection*{Procesor}
+\begin{minted}{text}
+$ lscpu
+Architecture:             x86_64
+  CPU op-mode(s):         32-bit, 64-bit
+  Address sizes:          48 bits physical, 48 bits virtual
+  Byte Order:             Little Endian
+CPU(s):                   24
+  On-line CPU(s) list:    0-23
+Vendor ID:                AuthenticAMD
+  Model name:             AMD Ryzen 9 7900X 12-Core Processor
+    CPU family:           25
+    Model:                97
+    Thread(s) per core:   2
+    Core(s) per socket:   12
+    Socket(s):            1
+    Stepping:             2
+    BogoMIPS:             9399.78
+    Flags:                fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 
+                          clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp 
+                          lm constant_tsc rep_good nopl tsc_reliable nonsto p_tsc cpuid extd_apicid 
+                          pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c 
+                          rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 
+                          3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall 
+                          fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap 
+                          avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveo pt 
+                          xsavec xgetbv1 xsaves avx512_bf16 clzero xsaveerptr arat npt nrip_save 
+                          tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold 
+                          v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gf ni vaes vpclmulqdq 
+                          avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm
+Caches (sum of all):      
+  L1d:                    384 KiB (12 instances)
+  L1i:                    384 KiB (12 instances)
+  L2:                     12 MiB (12 instances)
+  L3:                     32 MiB (1 instance)
+\end{minted}
+
+\newpage
+
+\section*{Obliczanie czasu oraz profilowanie}
+Czas został zmierzony dla zadanej liczby powtórzeń przy pomocy funkcji
+\begin{minted}{cpp}
+const auto start = std::chrono::steady_clock::now();
+for (int i = 0; i < repeats; ++i) {
+	normalized_content = normalize_text(content);
+}
+const auto finish = std::chrono::steady_clock::now();
+const std::chrono::duration<double> elapsed_seconds = finish - start;
+\end{minted}
+
+Fragment danych wejściowych (w zadaniu użyłem wersji o rozmiarach \\
+\verb|100KB|: \verb|1000| powtórzeń, \verb|100MB|: \verb|1| powtórzenie)
+
+\begin{minted}{text}
+	fpCEAO 
+	fpCEAOGDFl XBFFP } CueBMKk CueBMKk vRatVsQl 	
+	biNpsXGYw ITr BqHiYYKNdq 
+
+<?>KQSVANXP <?>WnDAMnLjs hyoBoKZ xosRuQ vNfnGT : <?>: sGZHP uuDnkhNiBy 	 
+VSyL IPegMxiL MxiL lbhYaRAt lbhYaRAt CUVWEIFBDQ 
+- FgFVuKt <?>-
+\end{minted}
+
+Do profilowania użyłem narzędzia \verb|perf|.
+
+
+
+
+
+
+
+
+
+
+
+\section*{Wersja bazowa}
+Implementacja polega na jednokrotnym przejściu przez tekst, mając zmienną
+na wynikowy tekst oraz zmienną na aktualnie ostatni i przetwarzany wyraz.
+Iteracja odbywa się litera po literze, dodając ją do odpowiedniej zmiennej
+w zależności od stanu. 
+
+\begin{minted}{cpp}
+/**
+ * @brief Normalizes a text string according to specified rules.
+ *
+ * Rules:
+ * 1. Remove non-printable ASCII characters (codes < 32 or > 126).
+ * 2. Replace sequences of whitespace characters with a single space.
+ * 3. Convert all letters to lowercase.
+ * 4. Convert punctuation to commas.
+ * 5. Eliminate consecutive duplicate words ("hi hi world"->"hi world").
+ *
+ * @param text The input string to normalize.
+ * @return The normalized string.
+ */
+ std::string normalize_text(const std::string& text) {
+  std::string result;
+  std::string word, last_word;
+  enum State { NORMAL, COMMA, SPACE, DUPLICATE_SPACE } state = NORMAL;
+
+  for (char c : text) {
+    if (c < 32 || c > 126) continue;  // rule 1
+
+    if (c == ' ') {
+      if (state == SPACE || state == DUPLICATE_SPACE) {  // rule 2
+        state = DUPLICATE_SPACE;
+      } else {
+        state = SPACE;
+      }
+    } else if (isalpha(c)) {  // rule 3
+      c = tolower(c);
+      state = NORMAL;
+    } else if (ispunct(c)) {  // rule 4
+      c = ',';
+      state = COMMA;
+    } else {
+      state = NORMAL;
+    }
+
+    if (state == COMMA || state == SPACE) {
+      // end of a word
+      if (!word.empty()) {  // rule 5
+        if (word != last_word) result += word;
+        last_word = word;
+        word.clear();
+      }
+      result += c;  // only delimiter
+    } else if (state == NORMAL) {
+      // in a word
+      word += c;  // only alphanumeric
+    }
+  }
+  if (word != last_word) result += word;  // last word
+
+  return result;
+}
+\end{minted}
+
+Czas działania dla plików o rozmiarze \verb|100KB|
+\begin{minted}{text}
+normalize1 -O0 [Benchmark (1000 iterations): 1.97064 seconds]
+normalize1 -O2 [Benchmark (1000 iterations): 0.64529 seconds]
+\end{minted}
+
+Czas działania dla plików o rozmiarze \verb|100MB|
+\begin{minted}{text}
+normalize1 -O0 [100MB][Benchmark (1 iterations): 1.98192 seconds]
+normalize1 -O2 [100MB][Benchmark (1 iterations): 0.710283 seconds]
+\end{minted}
+
+Wynik profilowania
+\begin{minted}{text}
+54.56%  a.out    libc.so.6             [.] __mcount_internal
+23.67%  a.out    libc.so.6             [.] _mcount
+ 4.25%  a.out    a.out                 [.] normalize_text(std::__cxx11::basic_string<char, ...
+ 4.13%  a.out    a.out                 [.] bool __gnu_cxx::operator!=<char const*, ...
+ 2.57%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, ...
+ 2.12%  a.out    a.out                 [.] __gnu_cxx::__normal_iterator<char const*, ...
+ 2.09%  a.out    a.out                 [.] __gnu_cxx::__normal_iterator<char const*, ...
+ 1.51%  a.out    a.out                 [.] __gnu_cxx::__normal_iterator<char const*, ...
+ 1.11%  a.out    a.out                 [.] std::__cxx11::basic_string<char, ...
+ 1.10%  a.out    libc.so.6             [.] tolower
+ 0.61%  a.out    a.out                 [.] bool std::operator==<char, std::char_traits<char>, ...
+ 0.50%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, ...
+ 0.29%  a.out    a.out                 [.] bool std::operator!=<char, std::char_traits<char>, ...
+\end{minted}
+
+Z analizy wyników możemy zaobserwować, że czas wykonania funkcji wygląda przyzwoicie,
+jedną z rzeczy, którą możemy spróbować zredukować, która nie jest wymaga w algorytmie, 
+jest dużo operacji na iteratorze. \\
+
+Wynik ten jednak widzimy, że jest znacznie poprawiony przy ustawieniu optymalizacji
+\verb|-O2|, co może sugerować, że kompilator mógł zoptymalizować operacje na iteratorze. \\
+
+Kolejną obserwacją jest liniowa złożoność czasowa, co jest zgodne z oczekiwaniami, ponieważ
+przechodzimy przez tekst tylko raz. \\
+
+Co do zużycia pamięci, jest ona akceptowalna, ponieważ trzymamy tylko 2 zmienne pomocnicze
+ograniczone do rozmiaru wyrazu oraz wynikowy tekst, który jest potrzebny, ponieważ pozwala
+nam nie niszczyć oryginalnego tekstu oraz pozwala na efektywną obsługę powtarzających się 
+wyrazów, co było by problematyczne przy usuwaniu ich w miejscu wymagającym przesunięcia
+wszystkich pozostałych wyrazów w takiej strukturze danych. \\
+
+
+
+
+
+
+\section*{Zwyczajna pętla oraz prealokacja}
+W tej wersji zamieniono pętlę \verb|range-for| na pętlę \verb|for| oraz przetestowano
+prealokację zmiennych \verb|result|, \verb|word| oraz \verb|last_word|. \\
+\begin{minted}{cpp}
+result.reserve(text.length());
+word.reserve(256);
+last_word.reserve(256);
+\end{minted}
+Użycie prealokacji zmiennych \textbf{nie przyniosło żadnej mierzalnej poprawy} w przypadku 
+1000 iteracji po pliku o rozmiarze \verb|100KB| oraz 1 iteracji po pliku o rozmiarze
+\verb|100MB|. \\
+
+\begin{minted}{cpp}
+std::string normalize_text(const std::string& text) {
+  std::string result;
+  std::string word, last_word;
+  enum State { NORMAL, COMMA, SPACE, DUPLICATE_SPACE } state = NORMAL;
+
+  for (size_t i = 0; i < text.length(); ++i) {
+    char c = text[i];
+    if (c < 32 || c > 126) continue;  // rule 1
+
+    if (c == ' ') {
+      if (state == SPACE || state == DUPLICATE_SPACE) {  // rule 2
+        state = DUPLICATE_SPACE;
+      } else {
+        state = SPACE;
+      }
+    } else if (isalpha(c)) {  // rule 3
+      c = tolower(c);
+      state = NORMAL;
+    } else if (ispunct(c)) {  // rule 4
+      c = ',';
+      state = COMMA;
+    } else {
+      state = NORMAL;
+    }
+
+    if (state == COMMA || state == SPACE) {
+      // end of a word
+      if (!word.empty()) {  // rule 5
+        if (word != last_word) result += word;
+        last_word = std::move(word);
+        word.clear();
+      }
+      result += c;  // only delimiter
+    } else if (state == NORMAL) {
+      // in a word
+      word += c;  // only alphanumeric
+    }
+  }
+  if (word != last_word) result += word;  // last word
+
+  return result;
+}
+\end{minted}
+
+Czas działania dla plików o rozmiarze \verb|100KB|
+\begin{minted}{text}
+normalize2 -O0 [Benchmark (1000 iterations): 1.31727 seconds]
+normalize2 -O2 [Benchmark (1000 iterations): 0.635332 seconds]
+\end{minted}
+
+Wynik profilowania
+\begin{minted}{text}
+34.90%  a.out    a.out                 [.] normalize_text(std::__cxx11::basic_string<char, ...
+19.21%  a.out    libc.so.6             [.] __mcount_internal
+ 9.18%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, ...
+ 7.85%  a.out    libc.so.6             [.] isalpha
+ 4.57%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, ...
+ 4.54%  a.out    libc.so.6             [.] _mcount
+ 4.33%  a.out    libc.so.6             [.] tolower
+ 2.75%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, ...
+ 1.99%  a.out    a.out                 [.] bool std::operator==<char, std::char_traits<char>, ...
+ 1.51%  a.out    a.out                 [.] bool std::operator!=<char, std::char_traits<char>, ...
+ 1.15%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, ...
+ 1.12%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, ...
+ 0.96%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, ...
+ 0.66%  a.out    a.out                 [.] std::__cxx11::basic_string<char, ...
+ 0.58%  a.out    libc.so.6             [.] __memmove_avx512_unaligned_erms
+\end{minted}
+
+W tym przypadku widzimy, że czas działania jest lepszy o około $30\%$ w przypadku
+kompilacji bez optymalizacji. Czas z optymalizacją \verb|-O2| jest identyczny jak
+w przypadku poprzedniej wersji co potwierdza tezę, że kompilator mógł zoptymalizować
+operacje na iteratorze. \\
+
+Dynamiczne zwiększanie rozmiaru zmiennych \verb|result|, \verb|word| oraz \verb|last_word|
+nie jest problematyczne, ponieważ algorytm pracując na dużych plikach tekstowych stosunkowo
+szybko osiągnie wymagany rozmiar zmiennych.
+
+
+
+
+
+
+
+\section*{Wersja bare-metal}
+W tej wersji użyto tablic znakowych w stylu C o stałym rozmiarze oraz ręcznych operacji
+na pamięci z użyciem \verb|new| oraz \verb|memcpy|. Program stał się znacznie mniej 
+czytelny oraz wykorzystujemy niebezpieczne operację jak \verb|strcmp|, co wymaga 
+znacznie większej ostrożności. Kolejnym problemem jest założenie maksymalnej długości
+słowa.
+
+\begin{minted}{cpp}
+char* normalize_text(const char* text, const ssize_t size) {
+  char* result = new char[size + 1];  // Null-terminated string
+  ssize_t result_len = 0;
+  char* word = new char[MAX_WORD_LEN];
+  ssize_t word_len = 0;
+  char* last_word = new char[MAX_WORD_LEN];
+  ssize_t last_word_len = 0;
+  enum State { NORMAL, COMMA, SPACE, DUPLICATE_SPACE } state = NORMAL;
+
+  for (size_t i = 0; i < size; ++i) {
+    char c = text[i];
+    if (c < 32 || c > 126) continue;  // rule 1
+
+    if (c == ' ') {
+      if (state == SPACE || state == DUPLICATE_SPACE) {  // rule 2
+        state = DUPLICATE_SPACE;
+      } else {
+        state = SPACE;
+      }
+    } else if (isalpha(c)) {  // rule 3
+      c = tolower(c);
+      state = NORMAL;
+    } else if (ispunct(c)) {  // rule 4
+      c = ',';
+      state = COMMA;
+    } else {
+      state = NORMAL;
+    }
+
+    if (state == COMMA || state == SPACE) {
+      // end of a word
+      if (word_len > 0) {  // rule 5
+        if (strcmp(word, last_word) != 0) {
+          memcpy(result + result_len, word, word_len + 1);
+          result_len += word_len;
+        }
+        memcpy(last_word, word, word_len + 1);
+        last_word_len = word_len;
+        word_len = 0;
+      }
+      result[result_len++] = c;  // only delimiter
+    } else if (state == NORMAL) {
+      // in a word
+      word[word_len++] = c;  // only alphanumeric
+    }
+  }
+  if (strcmp(word, last_word) != 0) {  // last word
+    memcpy(result + result_len, word, word_len + 1);
+    result_len += word_len;
+  }
+
+  // Clean up
+  result[result_len] = '\0';
+  delete[] word;
+  delete[] last_word;
+
+  return result;
+}
+\end{minted}
+
+Czas działania dla plików o rozmiarze \verb|100KB|
+\begin{minted}{text}
+normalize3 -O0 [Benchmark (1000 iterations): 0.755573 seconds]
+normalize3 -O2 [Benchmark (1000 iterations): 0.563578 seconds]
+\end{minted}
+
+Wynik profilowania
+\begin{minted}{text}
+49.18%  a.out    a.out                 [.] normalize_text(char const*, long) 
+28.42%  a.out    libc.so.6             [.] __strcmp_evex 
+ 6.24%  a.out    libc.so.6             [.] tolower 
+ 1.28%  a.out    libc.so.6             [.] __mcount_internal 
+ 0.97%  a.out    libc.so.6             [.] _mcount 
+ 0.44%  a.out    libc.so.6             [.] ispunct 
+ 0.24%  a.out    a.out                 [.] isalpha@plt 
+ 0.20%  a.out    a.out                 [.] tolower@plt 
+\end{minted}
+
+Tutaj czas działania jest o około $50\%$ krótszy niż w przypadku wersji poprzedniej
+pracującej na \verb|string| bez optymalizacji. \\
+
+W przypadku optymalizacji \verb|-O2| czas działania jest już tylko $12\%$ krótszy, 
+co także pokazuje, że kompilator dobrze radzi sobię z optymalizacją pracy z napisami
+w Cpp. \\
+
+Kod stał się znacznie mniej czytelny oraz bardziej podatny na błędy, co może nie być 
+warte takich zmian szczególnie jeśli nie jesteśmny ograniczeni platformą. \\
+
+W wyniku profilowania widzimy, że występują jedyne podstawowe operacje wykorzystywane
+w tej wersji algorytmu.
+
+
+
+
+
+
+\section*{Wersja równoległa}
+Opis wersji. TODO (wymaga rozwiązania problemu łącznia wyników)
+
+\begin{minted}{cpp}
+std::string normalize_text_threaded(const std::string& text) {
+  unsigned int num_threads = std::thread::hardware_concurrency();
+
+  // For very small texts or single thread systems, use the original function
+  if (text.size() < 1000 || num_threads <= 1) {
+    return normalize_text(text);
+  }
+
+  // Split the text into chunks
+  std::vector<std::string> chunks;
+  std::vector<std::thread> threads;
+  std::vector<std::string> results(num_threads);
+
+  size_t chunk_size = text.size() / num_threads;
+  for (unsigned int i = 0; i < num_threads; ++i) {
+    size_t start = i * chunk_size;
+    size_t end = (i == num_threads - 1) ? text.size() : (i + 1) * chunk_size;
+    chunks.push_back(text.substr(start, end - start));
+  }
+
+  // Process each chunk in a separate thread
+  for (unsigned int i = 0; i < num_threads; ++i) {
+    threads.emplace_back(
+        [&chunks, &results, i]() { results[i] = normalize_text(chunks[i]); });
+  }
+
+  // Wait for all threads to complete
+  for (auto& thread : threads) {
+    if (thread.joinable()) {
+      thread.join();
+    }
+  }
+
+  std::string combined_result;
+  for (const auto& result : results) {
+    combined_result += result;
+  }
+  return combined_result;
+}
+\end{minted}
+
+Czas działania dla plików o rozmiarze \verb|100KB| przy 24 wątkach
+\begin{minted}{text}
+normalize4 -O0 [Benchmark (1000 iterations): 1.43878 seconds]
+normalize4 -O2 [Benchmark (1000 iterations): 1.25015 seconds] > normalize1 -O2
+\end{minted}
+
+Czas działania dla plików o rozmiarze \verb|100MB| przy 24 wątkach
+\begin{minted}{text}
+normalize4 -O0 [100MB][Benchmark (1 iterations): 0.273202 seconds]
+normalize4 -O2 [100MB][Benchmark (1 iterations): 0.196783 seconds]
+\end{minted}
+
+Wynik profilowania
+\begin{minted}{text}
+98.43%  a.out    libc.so.6             [.] __mcount_internal 
+ 0.79%  a.out    libc.so.6             [.] _mcount 
+ 0.18%  a.out    a.out                 [.] normalize_text(std::__cxx11::basic_string<char, ...
+ 0.14%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, ...
+ 0.11%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, ...
+ 0.03%  a.out    libc.so.6             [.] tolower 
+ 0.03%  a.out    libc.so.6             [.] malloc 
+ 0.03%  a.out    libc.so.6             [.] __memmove_avx512_unaligned_erms 
+ 0.02%  a.out    a.out                 [.] __gnu_cxx::__normal_iterator<char const*, ...
+ 0.02%  a.out    a.out                 [.] __gnu_cxx::__normal_iterator<char const*, ...
+ 0.02%  a.out    a.out                 [.] bool __gnu_cxx::operator!=<char const*, ...
+ 0.01%  a.out    libc.so.6             [.] _int_malloc 
+ 0.01%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, ...
+ 0.01%  a.out    libc.so.6             [.] isalpha 
+ 0.01%  a.out    libstdc++.so.6.0.33   [.] std::__cxx11::basic_string<char, ...
+ 0.01%  a.out    libc.so.6             [.] _int_free 
+\end{minted}
+
+
+
+
+
+
+
+
+
+
+\section*{Wnioski}
+Operacje na ciągach tekstowych są trudne do optymalizacji. 
+Nie udało mi się znaleźć miejsca, w którym można by było
+wykorzystać wektoryzację. Powodem tego może być dosyć 
+skomplikowana logika algorytmu zależna od stanu. \\
+
+Być może rozdzielenie przetwarzania tekstu na kilka przebiegów
+umożliwiłoby bardziej efektywne optymalizacje, ale kosztem dodatkowych
+iteracji po całości tekstu. \\
+
+Wersja równoległa przyniosła poprawę w przypadku dużych plików (\verb|100MB|) 
+gdzie koszt, tworzenia nowych wątków był proprcjonalnie mały do czasu przetwarzania.
+Przyśpiesznie wynosiło około $15\%$ na każdy dodatkowy wątek (do 24, 
+czyli łącznie $3.6$ razy szybciej), co nie jest idealne. \\
+
+Najważniejszą obserwacją jest to, jak dobrze kompilator radzi sobie
+z optymalizacją kodu i implementacją abstrakcji w Cpp.
+W porównaniu z nieczytelną wersją w stylu C, wersja podstawowa przy 
+użyciu optymalizacji \verb|-O2| była tylko $14\%$ wolniejsza.
+
+\end{document}
