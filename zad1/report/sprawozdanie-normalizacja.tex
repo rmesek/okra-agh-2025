@@ -504,7 +504,13 @@ w tej wersji algorytmu.
 
 
 \section*{Wersja równoległa}
-Opis wersji. TODO (wymaga rozwiązania problemu łącznia wyników)
+W wersji równoległej użyto \verb|std::thread| oraz podziału tekstu na równe części
+w ilości wątków dostępnych w systemie. Dla każdej części uruchamiana jest bazowa
+wersja algorytmu.
+W tym przypadku nie rozważałem innych typów podziału, np. pomiedzy wyrazami ani 
+rozwiązywania problemów z łączeniem fragmentów, ponieważ ilość operacji łączenia 
+części będzie proprcjonalna do liczby wątków i nie wpłynie to w zauważalny sposób 
+na czas działania. 
 
 \begin{minted}{cpp}
 std::string normalize_text_threaded(const std::string& text) {
@@ -580,8 +586,14 @@ Wynik profilowania
  0.01%  a.out    libc.so.6             [.] _int_free 
 \end{minted}
 
-
-
+Tutaj najważniejszą obserwacją jest to, że czas działania w przypadku pracy na plikach
+o rozmiarze \verb|100KB| i 1000 iteracjach jest gorszy niż w przypadku wersji
+sekwencyjnej z powodu kosztu tworzenia nowych wątków. W wersji równoległej występują także
+problemy z profilowaniem. 
+W przypadku plików o rozmiarze \verb|100MB| i 1 iteracji czas działania jest lepszy, ale
+mimo wykorzystania 24 wątków, program był tylko $3.6$ razy szybszy. \\
+Także warto zauważyć, że w przypadku kiedy chcielbyśmy rzeczywiście rozdzielić przetwarzanie 
+podział na fragmenty oraz ich łączenie może nie być trywialne w zależności od algorytmu. 
 
 
 
