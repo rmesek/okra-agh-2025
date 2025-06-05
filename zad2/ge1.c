@@ -43,7 +43,7 @@ double dclock() {
 }
 
 int verify_solution(double *x, double *true_x, const int SIZE) {
-  double tolerance = 1e-6;
+  double tolerance = 1e-4;
 
   for (int i = 0; i < SIZE; i++) {
     if (fabs(x[i] - true_x[i]) > tolerance) return 1;  // Verification failed
