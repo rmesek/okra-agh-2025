@@ -31,13 +31,13 @@ int gaussian_elimination(double **A, double *b, double *x, const int SIZE) {
   int i, j, k, jj;
 
   // Forward elimination
-  for (k = 0; k < SIZE - 1; ++k) {
-    for (i = k + 1; i < SIZE; ++i) {
+  for (k = 0; k < SIZE - 1; k++) {
+    for (i = k + 1; i < SIZE; i++) {
       factor = A[i][k] / A[k][k];
       for (jj = k; jj <= SIZE - 8; jj += 8) {
         kernel_eliminate_8(A[k], A[i], jj, factor, SIZE);
       }
-      for (j = jj; j < SIZE; ++j) A[i][j] -= factor * A[k][j];
+      for (j = jj; j < SIZE; j++) A[i][j] -= factor * A[k][j];
       b[i] -= factor * b[k];
     }
   }
@@ -124,13 +124,6 @@ int main(int argc, const char *argv[]) {
   double *true_x = malloc(SIZE * sizeof(double));
 
   generate_solvable_system(A, b, true_x, SIZE);
-  // int counter = 1;
-  // for (int i = 0; i < SIZE; i++) {
-  //   for (int j = 0; j < SIZE; j++) {
-  //     A[i][j] = counter++;
-  //   }
-  // }
-  // print_matrix(A, SIZE);
 
   dtime = dclock();
   iret = gaussian_elimination(A, b, x, SIZE);
